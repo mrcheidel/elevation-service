@@ -1,0 +1,16 @@
+{
+  "name": "elevation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Claudio Heidel",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.2",
+    "geojson-elevation": "^1.1.1",
+    "node-hgt": "^1.2.2"
+  }
+}
