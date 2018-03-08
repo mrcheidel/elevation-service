@@ -10,7 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.2",
-    "geojson-elevation": "^1.1.1",
     "node-hgt": "^1.2.2"
   }
 }
