@@ -32,17 +32,3 @@ function handle404(req, res, next) {
 
 app.listen(config.express.port);
 console.log('App is listening on port ' + config.express.port);
-
-
-/*
-function getTileURL(lat, lon, zoom) {
-	var xtile = parseInt(Math.floor( (lon + 180) / 360 * (1<<zoom) ));
-	var ytile = parseInt(Math.floor( (1 - Math.log(Math.tan(lat.toRad()) + 1 / Math.cos(lat.toRad())) / Math.PI) / 2 * (1<<zoom) ));
-	return "https://s3.amazonaws.com/elevation-tiles-prod/normal/" + zoom + "/" + xtile + "/" + ytile + ".png";
-	
-	https://s3.amazonaws.com/elevation-tiles-prod/skadi/N04/N04E001.hgt.gz
-	
-	return "https://s3.amazonaws.com/elevation-tiles-prod/skadi/{N|S}" + ytile + "/{N|S}" + ytile + "{E|W}" + xtile + ".hgt.gz"
-}
-
-*/
