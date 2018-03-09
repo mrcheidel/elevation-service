@@ -4,7 +4,8 @@ const hgt     = require('node-hgt');
 const express = require('express');
 const config  = require(__dirname + '/config.js');
 const mkdirp  = require('mkdirp');
-const fs      = require('fs')
+const fs      = require('fs');
+const mapzen  = require('./mapzen');
 
 if (!fs.existsSync(config.tiles.folder)) {
 	mkdirp(config.tiles.folder, function (err) {
@@ -12,7 +13,7 @@ if (!fs.existsSync(config.tiles.folder)) {
 	});
 }
 
-var tileset = new hgt.TileSet(config.tiles.folder);
+var tileset = new hgt.TileSet(config.tiles.folder, {'downloader':new mapzen(config.tiles.folder)});
 var app = express();
 
 app.route('/ele')

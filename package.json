@@ -11,6 +11,6 @@
   "dependencies": {
     "express": "^4.16.2",
     "mkdirp": "^0.5.1",
-    "node-hgt": "git+https://github.com/mrcheidel/node-hgt.git"
+    "node-hgt": "^1.2.2"
   }
 }
