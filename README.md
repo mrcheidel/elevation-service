@@ -4,17 +4,19 @@ https://aws.amazon.com/es/public-datasets/terrain/
 
 
 Install NPM packages:
-```npm install```
+
+	npm install
 
 Run:
 
-	```./index.js	```
+	./index.js
 
 You can now access at 
  
-	```http://localhost:3001/ele?d=40.8501011,-3.9649810```
+	http://localhost:3001/ele?d=40.8501011,-3.9649810
 	
-<img src="result.png">
+	
+![Example](result.png?raw=true "Example")
 
 Todo:
 Add multi-coordinate request
