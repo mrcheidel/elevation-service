@@ -6,7 +6,7 @@ module.exports = {
     db: 'test'
   },
   express: {
-     port: 3000
+     port: 3001
   },
   tiles: {
   	folder: 'data/'

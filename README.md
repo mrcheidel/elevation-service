@@ -1,17 +1,19 @@
 # elevation-service
-Elevation API Service
+Elevation API Service using Mapzen on AWS tiles 
+https://aws.amazon.com/es/public-datasets/terrain/
 
-run as
 
-	./index.js
+Install NPM packages:
+```npm install```
 
-App is listening on port 3000
+Run:
 
-And then go to
+	```./index.js	```
+
+You can now access at 
  
-	http://localhost:3000/ele?d=40.8501011,-3.9649810
+	```http://localhost:3001/ele?d=40.8501011,-3.9649810```
 	
-
 <img src="result.png">
 
 Todo:
