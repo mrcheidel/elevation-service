@@ -21,7 +21,13 @@ function getElevation(req, res, next) {
 			console.log('getElevation failed: ' + err.message);
 			return res.json({'error': 'bad request'});
 		} else {
-			return res.json({'ele': parseInt(elevation)});
+			return res.json(
+			{
+			'lat': latlng[0],
+			'lng': latlng[1],
+			'ele': parseInt(elevation)
+			}
+			);
 		}
 	});
 }
