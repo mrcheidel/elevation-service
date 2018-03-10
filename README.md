@@ -13,8 +13,14 @@ Run:
 
 You can now access at 
  
-	http://localhost:3001/ele?d=40.8501011,-3.9649810
-	
+# With Shapes 
+
+	http://localhost:3001/height?json={"shape":[{"lat":40.712431,"lng":-76.504916},{"lat":40.712275,"lng":-76.605259}]}
+
+# With Encoded 
+
+	http://localhost:3001/height?json={"encoded":"morjnAme`eB?`A\\`@f@`A\\`@d@bB\\bBbAbBbB^bB`@~B?hC?`C`@bA`A?dCcAbBaC?gDeCaBiGcBiFcBeDgCcBgD?aCbBcAbB?`A`B`AhC`@bB?bA`@\\^]bAkB^aB_@aCcAkGaAaB`@e@^]bA\\?d@^?`@\\`@?^d@??_@\\cA^_@d@?\\^bA?|@?bA?d@?^??`@\\`@?^?`@?`@\""}
+
 	
 ![Example](result.png?raw=true "Example")
 

@@ -6,6 +6,7 @@ const config  = require(__dirname + '/config.js');
 const mkdirp  = require('mkdirp');
 const fs      = require('fs');
 const mapzen  = require('./mapzen');
+const path    = require('path');
 
 if (!fs.existsSync(config.tiles.folder)) {
 	mkdirp(config.tiles.folder, function (err) {
@@ -16,67 +17,92 @@ if (!fs.existsSync(config.tiles.folder)) {
 var tileset = new hgt.TileSet(config.tiles.folder, {'downloader':new mapzen(config.tiles.folder)});
 var app = express();
 
-app.route('/ele')
+
+
+app.use('/', express.static(path.join(__dirname + '/public')));
+
+app.route('/height')
   .get(getElevation);
-  
-// http://localhost:3001/elecomp/?d=morjnAme%60eB%3F%60A%5C%60%40f%40%60A%5C%60%40d%40bB%5CbBbAbBbB%5EbB%60%40~B%3FhC%3F%60C%60%40bA%60A%3FdCcAbBaC%3FgDeCaBiGcBiFcBeDgCcBgD%3FaCbBcAbB%3F%60A%60B%60AhC%60%40bB%3FbA%60%40%5C%5E%5DbAkB%5EaB_%40aCcAkGaAaB%60%40e%40%5E%5DbA%5C%3Fd%40%5E%3F%60%40%5C%60%40%3F%5Ed%40%3F%3F_%40%5CcA%5E_%40d%40%3F%5C%5EbA%3F%7C%40%3FbA%3Fd%40%3F%5E%3F%3F%60%40%5C%60%40%3F%5E%3F%60%40%3F%60%40
-app.route('/elecomp')
-  .get(getElevationCompressed);
-  
+
 
 app.use(handle404);
 
+/*
+
+http://localhost:3001/height?json={"shape":[{"lat":40.712431,"lng":-76.504916},{"lat":40.712275,"lng":-76.605259}]}
+
+http://localhost:3001/height?json={"encoded":"morjnAme`eB?`A\\`@f@`A\\`@d@bB\\bBbAbBbB^bB`@~B?hC?`C`@bA`A?dCcAbBaC?gDeCaBiGcBiFcBeDgCcBgD?aCbBcAbB?`A`B`AhC`@bB?bA`@\\^]bAkB^aB_@aCcAkGaAaB`@e@^]bA\\?d@^?`@\\`@?^d@??_@\\cA^_@d@?\\^bA?|@?bA?d@?^??`@\\`@?^?`@?`@\""}
+
+*/
+
 function getElevation(req, res, next) {
-    var latlng = req.query.d.split(',');
-    latlng[0] = parseFloat(latlng[0]);
-    latlng[1] = parseFloat(latlng[1]);
+    var alatlng = [];
+    var type;
+    var json    = req.query.json;
+    var id      = req.query.id;
 
-	tileset.getElevation(latlng, function(err, elevation) {
-		if (err) {
-			console.log('getElevation failed: ' + err.message);
-			return res.json({'error': 'bad request'});
-		} else {
-			return res.json(
-			{
-			'lat': latlng[0],
-			'lng': latlng[1],
-			'ele': parseInt(elevation)
-			}
-			);
+	if (json === undefined){
+		res.status(400).send("json parameter not found");
+	} else {
+		try {
+			json = JSON.parse (json);
+		} catch (e) {
+			res.status(400).send("Bad json");
 		}
-	});
-}
+	}
 
-function getElevationCompressed(req, res, next) {
-    var encoded = req.query.d;
-	var alatlng = decompress(encoded,6);
+	try {
+		if (json.shape){
+			type = "shape";
+			for (i=0;i<json.shape.length;i++) {
+				alatlng.push (parseFloat(json.shape[i].lat), parseFloat(json.shape[i].lng));
+			}
+		}
+	
+		if (json.encoded){
+			type = "encoded";
+			alatlng = decompress(json.encoded,6);
+		}
+    } catch (e) {
+    	console.log (e);
+    	res.status(400).send("Bad Request");
+    }
+    
 	var apromises = [];
 	
 	for(var i=0; i< alatlng.length; i+=2) {
 		var p = new Promise((resolve, reject) => {
-					var ll = [];
-					ll.push (parseFloat(alatlng[i]));
-					ll.push (parseFloat(alatlng[i+1]));
-					tileset.getElevation(ll, function(err, elevation) {
-						if (err) {
-							reject('getElevation failed: ' + err.message);
-						} else {
-							resolve(
-								{
-								'lat': ll[0],
-								'lng': ll[1],
-								'ele': parseInt(elevation)
-								}
-							);
+			var ll = [];
+			ll.push (parseFloat(alatlng[i]));
+			ll.push (parseFloat(alatlng[i+1]));
+			ll.push (i);
+
+			tileset.getElevation(ll, function(err, elevation) {
+				if (err) {
+					reject('getElevation failed: ' + err.message);
+				} else {
+					resolve(
+						{
+						'lat': ll[0],
+						'lng': ll[1],
+						'ele': parseInt(elevation),
+						'ord': ll[2]
 						}
-					});
-				});
+					);
+				}
+			});
+		});
 		  
 		apromises.push(p);
 	}
 
 	Promise.all(apromises).then(values => { 
-	  return res.json(values);
+	    //reorder and remove the ord property
+		values.sort(function(a,b) {return (a.ord > b.ord) ? 1 : ((b.ord > a.ord) ? -1 : 0);}); 
+		values.forEach(function(v){ delete v.ord });
+		var out = {[type]:values};
+		if (id !== undefined) out.id = id;
+	  	return res.json(out);
 	}, reason => {
 	  console.log(reason)
 	});
@@ -131,8 +157,9 @@ function compress(points, precision) {
 		var oldLat = 0,
 			oldLng = 0,
 			len = points.length,
-			index = 0;
-		var encoded = '';
+			index = 0,
+			encoded = '';
+			
 		precision = Math.pow(10, precision);
 		while (index < len) {
 			//  Round to N decimal places
