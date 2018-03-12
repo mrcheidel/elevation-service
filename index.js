@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-'use strict';
-
 const hgt     = require('node-hgt');
 const express = require('express');
 const config  = require(__dirname + '/config.js');
@@ -9,6 +7,9 @@ const mkdirp  = require('mkdirp');
 const fs      = require('fs');
 const mapzen  = require('./mapzen');
 const path    = require('path');
+const https   = require('https');
+const http    = require('http');
+const cors    = require('cors');
 
 if (!fs.existsSync(config.tiles.folder)) {
 	mkdirp(config.tiles.folder, function (err) {
@@ -19,6 +20,8 @@ if (!fs.existsSync(config.tiles.folder)) {
 var tileset = new hgt.TileSet(config.tiles.folder, {'downloader':new mapzen(config.tiles.folder)});
 var app = express();
 
+app.use(cors());
+
 app.use('/', express.static(path.join(__dirname + '/public')));
 
 app.route('/height')
@@ -27,38 +30,24 @@ app.route('/height')
 
 app.use(handle404);
 
-<<<<<<< HEAD
-/*
-
-http://localhost:3001/height?json={"shape":[{"lat":40.712431,"lng":-76.504916},{"lat":40.712275,"lng":-76.605259}]}
-
-http://localhost:3001/height?json={"encoded":"morjnAme`eB?`A\\`@f@`A\\`@d@bB\\bBbAbBbB^bB`@~B?hC?`C`@bA`A?dCcAbBaC?gDeCaBiGcBiFcBeDgCcBgD?aCbBcAbB?`A`B`AhC`@bB?bA`@\\^]bAkB^aB_@aCcAkGaAaB`@e@^]bA\\?d@^?`@\\`@?^d@??_@\\cA^_@d@?\\^bA?|@?bA?d@?^??`@\\`@?^?`@?`@\""}
-
-*/
-
 function checkReferer(refurl, apikey) {
-	var refurl_allowed = [];
 	var apikey_allowed = [];
+	apikey_allowed.push ({'key':'secret_key', 'ref':'*'});
+	apikey_allowed.push ({'key':'elevation_api_key', 'ref':'node.loctome.com'});
 	
-	if (apikey === undefined || refurl === undefined) return false;
-	
-	refurl_allowed.push ('node.loctome.com');
-	apikey_allowed.push ('elevation_api_key');
-	
-	for (i=0;i<refurl_allowed.length;i++){
-		if(refurl.indexOf(refurl_allowed[0]) > -1) {
-			for (i=0;i<apikey_allowed.length;i++){
-				if(apikey.indexOf(apikey_allowed[0]) > -1) {
-					return true;
-				}
+	for (i=0;i<apikey_allowed.length;i++){
+		console.log (apikey_allowed[i]);
+		if (apikey_allowed[i].key == apikey) {
+			if (apikey_allowed[i].ref == '*') return true;
+			if (refurl !== undefined) {
+				if (refurl.indexOf(apikey_allowed[i].ref) > -1) return true;
 			}
+		
 		}
 	}
 	return false;
 }
 
-=======
->>>>>>> 8b36f4eb4c8a4efa63af2fcb8b1f84334ea4c953
 function getElevation(req, res, next) {
 
     var alatlng = [];
@@ -75,13 +64,11 @@ function getElevation(req, res, next) {
 
 	if (json === undefined){
 		res.status(400).send("json parameter not found");
-		res.end();
 	} else {
 		try {
 			json = JSON.parse (json);
 		} catch (e) {
 			res.status(400).send("Bad json");
-			res.end();
 		}
 	}
 
@@ -100,7 +87,6 @@ function getElevation(req, res, next) {
     } catch (e) {
     	console.log (e);
     	res.status(400).send("Bad Request");
-    	res.end();
     }
     
 	var apromises = [];
@@ -137,19 +123,16 @@ function getElevation(req, res, next) {
 		values.forEach(function(v){ delete v.ord });
 		var out = {[type]:values};
 		if (id !== undefined) out.id = id;
-		res.setHeader('Content-Type', 'application/json');
-		res.end(JSON.stringify((out));
-
+	  	return res.json(out);
 	}, reason => {
-	  console.log(reason);
-	  res.end();
+	  console.log(reason)
 	});
+	
 }
 
 
 function handle404(req, res, next) {
   res.status(404).end('not found');
-  res.end();
 }
 
 function decompress(encoded, precision) {
@@ -217,5 +200,13 @@ function compress(points, precision) {
 	}
 }
 
-app.listen(config.express.port);
-console.log('App is listening on port ' + config.express.port);
+http.createServer(app).listen(config.express.port);
+https.createServer(config.server_options, app).listen(config.express.sslport);;
+
+console.log('App is listening on port ' + config.express.port + ' and ssl on '  + config.express.sslport);
+
+
+
+
+
+

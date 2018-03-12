@@ -1,0 +1,100 @@
+openapi: 3.0.0
+servers:
+  - url: 'https://node.loctome.com/'
+info:
+  description: Enrich coords with elevation data
+  version: 1.0.0
+  title: Loctome Elevation Service
+  contact:
+    name: Loctome Live Tracking
+    url: 'https://loctome.com/web/english/contact-us'
+tags:
+  - name: heigth
+    description: Enrich coords with elevation data
+    externalDocs:
+      description: Find out more
+      url: 'https://node.loctome.com'
+paths:
+  /height:
+    get:
+      tags:
+        - height
+      summary: Enrich coords with elevation data
+      description: ''
+      operationId: getElevation
+      parameters:
+        - name: json
+          in: query
+          description: shape array or encoded strings
+          required: true
+          schema:
+            type: string
+            anyOf:
+              - $ref: '#/components/schemas/Shape'
+              - $ref: '#/components/schemas/Encoded'
+            
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schemas/Shape'
+
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+      security:
+        - api_key: []
+components:
+  responses:
+    BadRequestError:
+      description: Bad request
+    UnauthorizedError:
+      description: API key is missing or invalid
+  securitySchemes:
+    api_key:
+      type: apiKey
+      in: query
+      name: api_key
+  schemas:
+    Encoded:
+      type: object
+      properties:
+        encoded:
+          type: string
+          format: string
+    Shape:
+      type: object
+      properties:
+        shape:
+          type: array
+          format: string
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/Coords'
+              - $ref: '#/components/schemas/EncodedCoords'
+            
+    Coords:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+          
+    EncodedCoords:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        ele:
+          type: number
+          format: double
