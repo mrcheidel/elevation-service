@@ -1,6 +1,6 @@
 module.exports = {
   express: {
-     port: 80
+     port: 3001
   },
   tiles: {
   	folder: 'data/'

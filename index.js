@@ -35,11 +35,40 @@ http://localhost:3001/height?json={"encoded":"morjnAme`eB?`A\\`@f@`A\\`@d@bB\\bB
 
 */
 
+function checkReferer(refurl, apikey) {
+	var refurl_allowed = [];
+	var apikey_allowed = [];
+	
+	if (apikey === undefined || refurl === undefined) return false;
+	
+	refurl_allowed.push ('node.loctome.com');
+	apikey_allowed.push ('elevation_api_key');
+	
+	for (i=0;i<refurl_allowed.length;i++){
+		if(refurl.indexOf(refurl_allowed[0]) > -1) {
+			for (i=0;i<apikey_allowed.length;i++){
+				if(apikey.indexOf(apikey_allowed[0]) > -1) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 function getElevation(req, res, next) {
+
     var alatlng = [];
     var type;
     var json    = req.query.json;
     var id      = req.query.id;
+    var refurl  = req.headers.referer;
+    var apikey  = req.query.api_key;
+
+    if (!checkReferer(refurl, apikey)) {
+    	res.status(400).send("Bad referer and api_key");
+    	return;
+    }
 
 	if (json === undefined){
 		res.status(400).send("json parameter not found");
