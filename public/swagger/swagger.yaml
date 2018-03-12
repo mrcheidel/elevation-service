@@ -1,0 +1,87 @@
+swagger: "2.0"
+info:
+  description: "Enrich coords with elevation data"
+  version: "1.0.0"
+  title: "Loctome Elevation Service"
+  contact:
+    email: "info@loctome.com"
+host: "node.loctome.com"
+basePath: "/"
+tags:
+- name: "heigth"
+  description: "Enrich coords with elevation data"
+  externalDocs:
+    description: "Find out more"
+    url: "http://node.loctome.com"
+schemes:
+- "http"
+paths:
+  /height:
+    get:
+      tags:
+      - "height"
+      summary: "Enrich coords with elevation data"
+      description: ""
+      operationId: "getElevation"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "json"
+        in: "query"
+        description: "shape or ... coords array"
+        required: true
+        type: "string"
+
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Shape"
+        400:
+          $ref: "#/responses/BadRequestError"
+        401:
+          $ref: "#/responses/UnauthorizedError"
+          
+      security:
+        - api_key: []
+        
+responses:
+  BadRequestError:
+    description: Bad request
+  UnauthorizedError:
+    description: API key is missing or invalid
+
+
+securityDefinitions:
+  api_key:
+    type: apiKey
+    in: query      
+    name: api_key  
+definitions:
+  Shape:
+    type: "object"
+    properties:
+      shape:
+        type: "array"
+        format: "string"
+        items:
+          $ref: "#/definitions/Coords"
+
+  Coords:
+    type: "object"
+    properties:
+      lat:
+        type: "number"
+        format: "double"
+      lng:
+        type: "number"
+        format: "double"
+      ele:
+        type: "number"
+        format: "double"
+
+                
+
+ 

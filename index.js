@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const hgt     = require('node-hgt');
 const express = require('express');
 const config  = require(__dirname + '/config.js');
@@ -17,8 +19,6 @@ if (!fs.existsSync(config.tiles.folder)) {
 var tileset = new hgt.TileSet(config.tiles.folder, {'downloader':new mapzen(config.tiles.folder)});
 var app = express();
 
-
-
 app.use('/', express.static(path.join(__dirname + '/public')));
 
 app.route('/height')
@@ -27,6 +27,7 @@ app.route('/height')
 
 app.use(handle404);
 
+<<<<<<< HEAD
 /*
 
 http://localhost:3001/height?json={"shape":[{"lat":40.712431,"lng":-76.504916},{"lat":40.712275,"lng":-76.605259}]}
@@ -56,6 +57,8 @@ function checkReferer(refurl, apikey) {
 	return false;
 }
 
+=======
+>>>>>>> 8b36f4eb4c8a4efa63af2fcb8b1f84334ea4c953
 function getElevation(req, res, next) {
 
     var alatlng = [];
@@ -72,11 +75,13 @@ function getElevation(req, res, next) {
 
 	if (json === undefined){
 		res.status(400).send("json parameter not found");
+		res.end();
 	} else {
 		try {
 			json = JSON.parse (json);
 		} catch (e) {
 			res.status(400).send("Bad json");
+			res.end();
 		}
 	}
 
@@ -95,6 +100,7 @@ function getElevation(req, res, next) {
     } catch (e) {
     	console.log (e);
     	res.status(400).send("Bad Request");
+    	res.end();
     }
     
 	var apromises = [];
@@ -131,16 +137,19 @@ function getElevation(req, res, next) {
 		values.forEach(function(v){ delete v.ord });
 		var out = {[type]:values};
 		if (id !== undefined) out.id = id;
-	  	return res.json(out);
+		res.setHeader('Content-Type', 'application/json');
+		res.end(JSON.stringify((out));
+
 	}, reason => {
-	  console.log(reason)
+	  console.log(reason);
+	  res.end();
 	});
-	
 }
 
 
 function handle404(req, res, next) {
   res.status(404).end('not found');
+  res.end();
 }
 
 function decompress(encoded, precision) {
@@ -208,12 +217,5 @@ function compress(points, precision) {
 	}
 }
 
-
 app.listen(config.express.port);
 console.log('App is listening on port ' + config.express.port);
-
-
-
-
-
-
