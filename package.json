@@ -11,6 +11,7 @@
   "dependencies": {
     "cors": "^2.8.4",
     "express": "^4.16.2",
+    "express-force-ssl": "^0.3.2",
     "mkdirp": "^0.5.1",
     "node-hgt": "^1.2.2"
   }

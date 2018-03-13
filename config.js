@@ -7,9 +7,14 @@ module.exports = {
   	folder: 'data/'
   },
   server_options: {
-	key  : require('fs').readFileSync('private/certificates/' + 'private.key', 'utf8'),
-	ca   : require('fs').readFileSync('private/certificates/' + 'ca_bundle.crt', 'utf8'),
-	cert : require('fs').readFileSync('private/certificates/' + 'certificate.crt', 'utf8')
-  }
+	key  : 'private/certificates/private.key',
+	ca   : 'private/certificates/ca_bundle.crt',
+	cert : 'private/certificates/certificate.crt'
+  },
+  api_keys: [
+	{'key':'secret_key', 'ref':'*'},
+	{'key':'elevation_api_key', 'ref':'node.loctome.com'},
+	{'key':'elevation_api_key', 'ref':'editor.swagger.io'}
+	]
 };
 

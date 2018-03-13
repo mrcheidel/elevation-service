@@ -3,13 +3,14 @@
 const hgt     = require('node-hgt');
 const express = require('express');
 const config  = require(__dirname + '/config.js');
-const mkdirp  = require('mkdirp');
-const fs      = require('fs');
-const mapzen  = require('./mapzen');
-const path    = require('path');
-const https   = require('https');
-const http    = require('http');
-const cors    = require('cors');
+const mkdirp   = require('mkdirp');
+const fs       = require('fs');
+const mapzen   = require('./mapzen');
+const path     = require('path');
+const https    = require('https');
+const http     = require('http');
+const cors     = require('cors');
+const forcessl = require('express-force-ssl');
 
 if (!fs.existsSync(config.tiles.folder)) {
 	mkdirp(config.tiles.folder, function (err) {
@@ -18,11 +19,25 @@ if (!fs.existsSync(config.tiles.folder)) {
 }
 
 var tileset = new hgt.TileSet(config.tiles.folder, {'downloader':new mapzen(config.tiles.folder)});
+
+for(var key in config.server_options) {config.server_options[key] = fs.readFileSync(config.server_options[key]);}
+
 var app = express();
 
 app.use(cors());
 
-app.use('/', express.static(path.join(__dirname + '/public')));
+
+
+app.set('forceSSLOptions', {
+  enable301Redirects: true,
+  trustXFPHeader: false,
+  httpsPort: config.express.sslport,
+  sslRequiredMessage: 'SSL Required.'
+});
+
+
+
+app.use('/', forcessl, express.static(path.join(__dirname + '/public')));
 
 app.route('/height')
   .get(getElevation);
@@ -31,18 +46,12 @@ app.route('/height')
 app.use(handle404);
 
 function checkReferer(refurl, apikey) {
-	var apikey_allowed = [];
-	apikey_allowed.push ({'key':'secret_key', 'ref':'*'});
-	apikey_allowed.push ({'key':'elevation_api_key', 'ref':'node.loctome.com'});
-	
-	for (i=0;i<apikey_allowed.length;i++){
-		console.log (apikey_allowed[i]);
-		if (apikey_allowed[i].key == apikey) {
-			if (apikey_allowed[i].ref == '*') return true;
+	for (i=0;i<config.api_keys.length;i++){
+		if (config.api_keys[i].key == apikey) {
+			if (config.api_keys[i].ref == '*') return true;
 			if (refurl !== undefined) {
-				if (refurl.indexOf(apikey_allowed[i].ref) > -1) return true;
+				if (refurl.indexOf(config.api_keys[i].ref) > -1) return true;
 			}
-		
 		}
 	}
 	return false;
