@@ -91,7 +91,7 @@ function getElevation(req, res, next) {
 	
 		if (json.encoded){
 			type = "encoded";
-			alatlng = decompress(json.encoded,6);
+			alatlng = decompress(decodeURI(json.encoded),6);
 		}
     } catch (e) {
     	console.log (e);
@@ -134,7 +134,8 @@ function getElevation(req, res, next) {
 		if (id !== undefined) out.id = id;
 	  	return res.json(out);
 	}, reason => {
-	  console.log(reason)
+	  console.log(reason);
+	  return;
 	});
 	
 }
@@ -146,13 +147,13 @@ function handle404(req, res, next) {
 
 function decompress(encoded, precision) {
 	try {
-	    var p = precision;
+	    var ps = precision;
 		precision = Math.pow(10, -precision);
 		var len = encoded.length,
 			index = 0,
 			lat = 0,
 			lng = 0,
-			array = [];
+			array = new Array();
 		while (index < len) {
 			var b, shift = 0,
 				result = 0;
@@ -172,15 +173,17 @@ function decompress(encoded, precision) {
 			} while (b >= 0x20);
 			var dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
 			lng += dlng;
+			array.push(parseFloat(lat * precision).toFixed(ps));
+			array.push(parseFloat(lng * precision).toFixed(ps));
 
-			array.push((lat * precision).toFixed(p));
-			array.push((lng * precision).toFixed(p));
 		}
 		return array;
+		
 	} catch (err) {
-		msg(err);
+		console.log(err);
 	}
 }
+
 
 function compress(points, precision) {
 	try {
@@ -205,7 +208,7 @@ function compress(points, precision) {
 		}
 		return encoded;
 	} catch (err) {
-		msg(err);
+		console.log(err);
 	}
 }
 

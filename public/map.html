@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Loctome Terrain Elevation Service - Demo</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
+      #map {
+        height: 100%;
+      }
+
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      
+      #chartContainer{
+        position: absolute;
+        bottom: 10px;
+        left: 10%;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding: 0px;
+        width: 80%;
+        height: 150px;
+      }
+    </style>
+	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script> 
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  </head>
+  <body>
+    <div id="map"></div>
+	<div id="chartContainer"></div>
+    <script>
+
+	var dps = [];
+	var dataLength = 250; 
+	var chart = new CanvasJS.Chart("chartContainer", {
+		exportEnabled: true,
+		title :{
+			text: "Loctome API Elevation Terrain Service"
+		},
+		axisY: {
+			includeZero: false
+		},
+		data: [{
+			type: "spline",
+			markerSize: 0,
+			dataPoints: dps 
+		}]
+	});
+
+
+	var marker1, marker2;
+	var poly, geodesicPoly;
+
+	function initMap() {
+		var myLatlng = {lat: 40, lng: -3};
+		var map = new google.maps.Map(document.getElementById('map'), {
+			zoom: 6,
+			center: myLatlng
+		});
+
+		map.controls[google.maps.ControlPosition.TOP_CENTER].push(document.getElementById('info'));
+
+		marker1 = new google.maps.Marker({map: map, draggable: true,position: {lat: 41.08323, lng: -4.44929}});
+		marker2 = new google.maps.Marker({map: map, draggable: true,position: {lat: 39.66146, lng: -3.10367}});
+
+		google.maps.event.addListener(marker1, 'dragend', update);
+		google.maps.event.addListener(marker2, 'dragend', update);
+
+		geodesicPoly = new google.maps.Polyline({
+		  strokeColor: '#CC0099',
+		  strokeOpacity: 1.0,
+		  strokeWeight: 3,
+		  geodesic: true,
+		  map: map
+		});
+
+		update();
+	}
+
+	function requestElevation (encoded) {
+		var json ={"encoded":encodeURI(encoded)};
+		$.ajax({
+			 type: "GET",
+			 data: {"api_key":"elevation_api_key", "json": JSON.stringify(json)},
+			 url: 'https://node.loctome.com/height',
+			 success: function(response){
+				if(response.encoded) {
+					dps = []; 
+					for (var j = 0; j < response.encoded.length; j++) {	
+						dps.push({
+							x: j,
+							y: response.encoded[j].ele
+						});
+					}
+					chart.options.data[0].dataPoints = dps;
+					chart.render();
+				}
+			 }
+		});
+	}
+
+	function update() {
+		var path = [marker1.getPosition(), marker2.getPosition()];
+		var distance = getDistance(path[0],path[1]);
+		var heading = google.maps.geometry.spherical.computeHeading(path[0], path[1]);
+		geodesicPoly.setPath(path);
+		var encoded = genEncodedPath (path[0],  path[1], dataLength);
+		requestElevation(encoded);
+	}
+      
+      
+	function genEncodedPath (LatLng1, LatLng2, numValues) {
+		var distance = getDistance(LatLng1,LatLng2);
+		var polydist = distance / numValues;
+		var heading  = google.maps.geometry.spherical.computeHeading(LatLng1,LatLng2);
+		var path = Array();
+		for (var i=1;i<=numValues;i++) {
+			var ll = destVincenty(LatLng1.lat(), LatLng1.lng(), heading, polydist * i)
+			path.push (ll.lat());
+			path.push (ll.lng());
+		}
+		var str = compress(path, 6);
+		return str;
+	}
+
+	function compress(points, precision) {
+		try {
+			var oldLat = 0,
+				oldLng = 0,
+				len = points.length,
+				index = 0;
+			var encoded = '';
+			precision = Math.pow(10, precision);
+			while (index < len) {
+				//  Round to N decimal places
+				var lat = Math.round(points[index++] * precision);
+				var lng = Math.round(points[index++] * precision);
+
+				//  Encode the differences between the points
+				encoded += encodeNumber(lat - oldLat);
+				encoded += encodeNumber(lng - oldLng);
+
+				oldLat = lat;
+				oldLng = lng;
+			}
+			return encoded;
+		} catch (err) {
+			console.log(err);
+		}
+	}
+
+	function encodeNumber(num) {
+		try {
+			var num = num << 1;
+			if (num < 0) {
+				num = ~(num);
+			}
+			var encoded = '';
+			while (num >= 0x20) {
+				encoded += String.fromCharCode((0x20 | (num & 0x1f)) + 63);
+				num >>= 5;
+			}
+			encoded += String.fromCharCode(num + 63);
+			return encoded;
+		} catch (err) {
+			console.log(err);
+		}
+	}
+
+	function toRad(n) {
+		return n * Math.PI / 180;
+	};
+	function toDeg(n) {
+		return n * 180 / Math.PI;
+	};
+	function destVincenty(lat1, lon1, brng, dist) {
+	 var a = 6378137,
+		 b = 6356752.3142,
+		 f = 1 / 298.257223563, // WGS-84 ellipsiod
+		 s = dist,
+		 alpha1 = toRad(brng),
+		 sinAlpha1 = Math.sin(alpha1),
+		 cosAlpha1 = Math.cos(alpha1),
+		 tanU1 = (1 - f) * Math.tan(toRad(lat1)),
+		 cosU1 = 1 / Math.sqrt((1 + tanU1 * tanU1)), sinU1 = tanU1 * cosU1,
+		 sigma1 = Math.atan2(tanU1, cosAlpha1),
+		 sinAlpha = cosU1 * sinAlpha1,
+		 cosSqAlpha = 1 - sinAlpha * sinAlpha,
+		 uSq = cosSqAlpha * (a * a - b * b) / (b * b),
+		 A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq))),
+		 B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq))),
+		 sigma = s / (b * A),
+		 sigmaP = 2 * Math.PI;
+	 while (Math.abs(sigma - sigmaP) > 1e-12) {
+	  var cos2SigmaM = Math.cos(2 * sigma1 + sigma),
+		  sinSigma = Math.sin(sigma),
+		  cosSigma = Math.cos(sigma),
+		  deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
+	  sigmaP = sigma;
+	  sigma = s / (b * A) + deltaSigma;
+	 };
+	 var tmp = sinU1 * sinSigma - cosU1 * cosSigma * cosAlpha1,
+		 lat2 = Math.atan2(sinU1 * cosSigma + cosU1 * sinSigma * cosAlpha1, (1 - f) * Math.sqrt(sinAlpha * sinAlpha + tmp * tmp)),
+		 lambda = Math.atan2(sinSigma * sinAlpha1, cosU1 * cosSigma - sinU1 * sinSigma * cosAlpha1),
+		 C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha)),
+		 L = lambda - (1 - C) * f * sinAlpha * (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM))),
+		 revAz = Math.atan2(sinAlpha, -tmp); // final bearing
+	 return new google.maps.LatLng(toDeg(lat2), lon1 + toDeg(L));
+	};
+
+	var getDistance = function(p1, p2) {
+		var R = 6378137; // Earth’s mean radius in meter
+		var dLat = toRad(p2.lat() - p1.lat());
+		var dLong = toRad(p2.lng() - p1.lng());
+		var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+		Math.cos(toRad(p1.lat())) * Math.cos(toRad(p2.lat())) *
+		Math.sin(dLong / 2) * Math.sin(dLong / 2);
+		var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+		var d = R * c;
+		return d; // returns the distance in meter
+	}; 
+      
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmEhDynp90FRf_jq27rNnckdsA5Hu9y_g&libraries=geometry&callback=initMap" async defer></script>
+  </body>
+</html>

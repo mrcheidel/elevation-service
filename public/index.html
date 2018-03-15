@@ -3,7 +3,7 @@
   <head>
   	<title>API Elevation Service</title>
     <meta charset='utf-8'>
-	<link rel="stylesheet" href="https://node.loctome.com/css/modest.css">
+	<link rel="stylesheet" href="css/modest.css">
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <meta name="author" content="">
     <meta name="description" content="API Terrain Elevation Service">
@@ -19,13 +19,18 @@
 </head>
 <body>
 <div id="content" style="visibility:hidden"; >
-# Loctome API - Terrain Elevation Service
+# Loctome API 
+# Terrain Elevation Service
 
-![Elevation Service](https://node.loctome.com/images/elevation.png =80%x*)
+![Elevation Service](https://node.loctome.com/images/elevation.png =100%x*)
 
-This service is used to enrich coords with the terrain elevation data
+This service provide the functionality to enrich coords with the terrain elevation data
 
-If do you like use this service, please [Contact with us](https://loctome.com/web/english/contact-us) to request an api_key that allow.
+If do you like use this service, please [Contact with us](https://loctome.com/web/english/contact-us) to request an api_key that allow the autentification.
+
+## Who to use it?
+
+This API can be used with two format of input coords data
 
 ## With Shapes Coords
 
@@ -33,7 +38,7 @@ If do you like use this service, please [Contact with us](https://loctome.com/we
 
 Test [Link](https://node.loctome.com/height?json={%22shape%22:[{%22lat%22:40.712431,%22lng%22:-76.504916},{%22lat%22:40.712275,%22lng%22:-76.605259}]}&api_key=elevation_api_key)
 
-![Shape](https://node.loctome.com/images/shape.png =80%x*)
+![Shape](https://node.loctome.com/images/shape.png =100%x*)
 
 ## With Encoded Coords
 
@@ -43,7 +48,15 @@ You could be send multiple coords as compressed-encoded format
 
 Test [Link](https://node.loctome.com/height?json={%22encoded%22%3A%22morjnAme%60eB%3F%60A%5C%5C%60%40f%40%60A%5C%5C%60%40d%40bB%5C%5CbBbAbBbB%5EbB%60%40~B%3FhC%3F%60C%60%40bA%60A%3FdCcAbBaC%3FgDeCaBiGcBiFcBeDgCcBgD%3FaCbBcAbB%3F%60A%60B%60AhC%60%40bB%3FbA%60%40%5C%5C%5E%5DbAkB%5EaB_%40aCcAkGaAaB%60%40e%40%5E%5DbA%5C%5C%3Fd%40%5E%3F%60%40%5C%5C%60%40%3F%5Ed%40%3F%3F_%40%5C%5CcA%5E_%40d%40%3F%5C%5C%5EbA%3F%7C%40%3FbA%3Fd%40%3F%5E%3F%3F%60%40%5C%5C%60%40%3F%5E%3F%60%40%3F%60%40%5C%22%22}&api_key=elevation_api_key)
 
-![Encoded](https://node.loctome.com/images/encoded.png =80%x*)
+![Encoded](https://node.loctome.com/images/encoded.png =100%x*)
+
+## Demo Map 
+
+[Try the Map Demo App](https://node.loctome.com/map.html)
+
+![Map](https://node.loctome.com/images/map.png =100%x*)
+
+
 
 ## Compress Encode javascript example code:
 
@@ -76,12 +89,32 @@ Test [Link](https://node.loctome.com/height?json={%22encoded%22%3A%22morjnAme%60
 			msg(err);
 		}
 	}
+	
+	function encodeNumber(num) {
+		try {
+			var num = num << 1;
+			if (num < 0) {
+				num = ~(num);
+			}
+			var encoded = '';
+			while (num >= 0x20) {
+				encoded += String.fromCharCode((0x20 | (num & 0x1f)) + 63);
+				num >>= 5;
+			}
+			encoded += String.fromCharCode(num + 63);
+			return encoded;
+		} catch (err) {
+			msg(err);
+		}
+	}
+	
+	
 
 ## Swagger API Definition
 
 Access to the Swagger API defintion in the folow [Link](https://editor.swagger.io/?url=https://node.loctome.com/swagger/elevation.yaml) 
 
-![openapi](https://node.loctome.com/images/swagger.png =80%x*)
+![openapi](https://node.loctome.com/images/swagger.png =100%x*)
 </div>
 </body>
 </html>
