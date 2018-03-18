@@ -33,13 +33,14 @@
     </style>
 	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script> 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-  </head>
-  <body>
+</head>
+<body>
     <div id="map"></div>
 	<div id="chartContainer"></div>
     <script>
 
 	var dps = [];
+	var pts = [];
 	var dataLength = 250; 
 	var chart = new CanvasJS.Chart("chartContainer", {
 		exportEnabled: true,
@@ -49,26 +50,39 @@
 		axisY: {
 			includeZero: false
 		},
+
 		data: [{
 			type: "spline",
 			markerSize: 0,
 			dataPoints: dps 
 		}]
 	});
+	
+	
+	$(".canvasjs-chart-canvas").on("mousemove", function(event) {
+		try {
+			var parentOffset = $(this).parent().offset();
+			var relX = event.pageX - parentOffset.left;
+			var xValue = Math.round(chart.axisX[0].convertPixelToValue(relX));
+			marker3.setPosition(new google.maps.LatLng(pts[xValue].lat, pts[xValue].lng));
+		} catch (ex) {};
+	});
 
 
-	var marker1, marker2;
+	var marker1, marker2, marker3;
 	var poly, geodesicPoly;
 
 	function initMap() {
 		var myLatlng = {lat: 40, lng: -3};
 		var map = new google.maps.Map(document.getElementById('map'), {
 			zoom: 6,
-			center: myLatlng
+			center: myLatlng,
+			mapTypeId: 'terrain'
 		});
 
 		map.controls[google.maps.ControlPosition.TOP_CENTER].push(document.getElementById('info'));
 
+		marker3 = new google.maps.Marker({map: map, draggable: true,position: {lat: 39.66146, lng: -3.10367}});
 		marker1 = new google.maps.Marker({map: map, draggable: true,position: {lat: 41.08323, lng: -4.44929}});
 		marker2 = new google.maps.Marker({map: map, draggable: true,position: {lat: 39.66146, lng: -3.10367}});
 
@@ -90,11 +104,12 @@
 		var json ={"encoded":encodeURI(encoded)};
 		$.ajax({
 			 type: "GET",
-			 data: {"api_key":"elevation_api_key", "json": JSON.stringify(json)},
+			 data: {"api_key":"secret_key", "json": JSON.stringify(json)}, //elevation_api_key
 			 url: 'https://node.loctome.com/height',
 			 success: function(response){
 				if(response.encoded) {
 					dps = []; 
+					pts = response.encoded;
 					for (var j = 0; j < response.encoded.length; j++) {	
 						dps.push({
 							x: j,
@@ -109,6 +124,7 @@
 	}
 
 	function update() {
+		marker3.setPosition(marker2.getPosition());
 		var path = [marker1.getPosition(), marker2.getPosition()];
 		var distance = getDistance(path[0],path[1]);
 		var heading = google.maps.geometry.spherical.computeHeading(path[0], path[1]);
@@ -116,7 +132,6 @@
 		var encoded = genEncodedPath (path[0],  path[1], dataLength);
 		requestElevation(encoded);
 	}
-      
       
 	function genEncodedPath (LatLng1, LatLng2, numValues) {
 		var distance = getDistance(LatLng1,LatLng2);
@@ -229,7 +244,15 @@
 		return d; // returns the distance in meter
 	}; 
       
-    </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmEhDynp90FRf_jq27rNnckdsA5Hu9y_g&libraries=geometry&callback=initMap" async defer></script>
-  </body>
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBmEhDynp90FRf_jq27rNnckdsA5Hu9y_g&libraries=geometry&callback=initMap" async defer></script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-58598757-1', 'auto');
+  ga('send', 'pageview');
+</script>
+</body>
 </html>
