@@ -14,6 +14,7 @@ module.exports = {
   api_keys: [
 	{'key':'secret_key', 'ref':'*'},
 	{'key':'elevation_api_key', 'ref':'node.loctome.com'},
+	{'key':'elevation_api_key', 'ref':'loctome.com'},
 	{'key':'elevation_api_key', 'ref':'editor.swagger.io'}
 	]
 };
