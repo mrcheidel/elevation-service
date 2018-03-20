@@ -24,9 +24,9 @@ for(var key in config.server_options) {config.server_options[key] = fs.readFileS
 
 var app = express();
 
+app.disable('x-powered-by');
+
 app.use(cors());
-
-
 
 app.set('forceSSLOptions', {
   enable301Redirects: true,
@@ -35,13 +35,10 @@ app.set('forceSSLOptions', {
   sslRequiredMessage: 'SSL Required.'
 });
 
-
-
 app.use('/', forcessl, express.static(path.join(__dirname + '/public')));
 
 app.route('/height')
   .get(getElevation);
-
 
 app.use(handle404);
 

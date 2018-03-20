@@ -13,11 +13,12 @@
         height: 100%;
         margin: 0;
         padding: 0;
+        overflow: hidden;
       }
       
       #chartContainer{
         position: absolute;
-        bottom: 10px;
+        bottom: 20px;
         left: 10%;
         z-index: 5;
         background-color: #fff;
@@ -82,7 +83,7 @@
 
 		map.controls[google.maps.ControlPosition.TOP_CENTER].push(document.getElementById('info'));
 
-		marker3 = new google.maps.Marker({map: map, draggable: true,position: {lat: 39.66146, lng: -3.10367}});
+		marker3 = new google.maps.Marker({map: map, draggable: false,position: {lat: 39.66146, lng: -3.10367}});
 		marker1 = new google.maps.Marker({map: map, draggable: true,position: {lat: 41.08323, lng: -4.44929}});
 		marker2 = new google.maps.Marker({map: map, draggable: true,position: {lat: 39.66146, lng: -3.10367}});
 
