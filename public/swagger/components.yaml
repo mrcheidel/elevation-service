@@ -1,0 +1,52 @@
+openapi: 3.0.0
+components:
+  responses:
+    BadRequestError:
+      description: Bad request
+    UnauthorizedError:
+      description: API key is missing or invalid
+  securitySchemes:
+    api_key:
+      type: apiKey
+      in: query
+      name: api_key
+  schemas:
+    Encoded:
+      type: object
+      properties:
+        encoded:
+          type: string
+          format: string
+    Shape:
+      type: object
+      properties:
+        shape:
+          type: array
+          format: string
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/Coords'
+              - $ref: '#/components/schemas/EncodedCoords'
+            
+    Coords:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+          
+    EncodedCoords:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+        ele:
+          type: number
+          format: double
