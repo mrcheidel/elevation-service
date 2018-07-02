@@ -1,0 +1,9 @@
+      type: object
+      properties:
+        shape:
+          type: array
+          format: string
+          items:
+            anyOf:
+              - $ref: ./Coords.yaml
+              - $ref: ./EncodedCoords.yaml

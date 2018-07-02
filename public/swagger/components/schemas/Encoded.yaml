@@ -1,0 +1,5 @@
+      type: object
+      properties:
+        encoded:
+          type: string
+          format: string
